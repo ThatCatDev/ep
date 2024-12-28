@@ -84,7 +84,9 @@ func TestNewProcessor(t *testing.T) {
 		payloadBytes, _ := json.Marshal(payload)
 		// produce message
 		producer := kafka.NewKafkaDriver(&config)
-		_ = producer.Produce(context.Background(), topicName, payloadBytes)
+		_ = producer.Produce(context.Background(), topicName, &kafka2.Message{
+			Value: payloadBytes,
+		})
 		_ = producer.Close()
 
 		time.Sleep(5 * time.Second)
@@ -166,7 +168,9 @@ func TestNewProcessor(t *testing.T) {
 		payloadBytes, _ := json.Marshal(payload)
 		// produce message
 		producer := kafka.NewKafkaDriver(&config)
-		_ = producer.Produce(context.Background(), topicName, payloadBytes)
+		_ = producer.Produce(context.Background(), topicName, &kafka2.Message{
+			Value: payloadBytes,
+		})
 
 		time.Sleep(5 * time.Second)
 		counter.Lock()
@@ -249,7 +253,9 @@ func TestNewProcessor(t *testing.T) {
 		payloadBytes, _ := json.Marshal(payload)
 		// produce message
 		producer := kafka.NewKafkaDriver(&config)
-		_ = producer.Produce(context.Background(), topicName, payloadBytes)
+		_ = producer.Produce(context.Background(), topicName, &kafka2.Message{
+			Value: payloadBytes,
+		})
 
 		time.Sleep(5 * time.Second)
 		counter.Lock()
