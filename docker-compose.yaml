@@ -21,3 +21,14 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk1
+  kafdrop:
+    image: obsidiandynamics/kafdrop
+    restart: unless-stopped
+    container_name: kafdrop
+    ports:
+      - 9000:9000
+    environment:
+      KAFKA_BROKERCONNECT: broker:29092
+      JVM_OPTS: "-Xms32M -Xmx64M"
+    depends_on:
+      - broker
