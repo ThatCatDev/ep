@@ -46,7 +46,9 @@ func TestNewProcessor(t *testing.T) {
 		driver := kafka.NewKafkaDriver(&config)
 		a.NotNil(driver)
 
-		_ = driver.CreateTopic(context.Background(), topicName)
+		err := driver.CreateTopic(context.Background(), topicName)
+		a.Nil(err)
+		time.Sleep(2 * time.Second)
 
 		type Payload struct {
 			Count int
@@ -113,7 +115,9 @@ func TestNewProcessor(t *testing.T) {
 		driver := kafka.NewKafkaDriver(&config)
 		a.NotNil(driver)
 
-		_ = driver.CreateTopic(context.Background(), topicName)
+		err := driver.CreateTopic(context.Background(), topicName)
+		a.Nil(err)
+		time.Sleep(2 * time.Second)
 
 		type Payload struct {
 			Count int
@@ -147,9 +151,12 @@ func TestNewProcessor(t *testing.T) {
 		}
 
 		go func() {
-			_ = processorInstance.
+			err := processorInstance.
 				AddMiddleware(middlewareFunc).
 				Run(context.Background())
+			if err != nil {
+				panic(err)
+			}
 		}()
 
 		time.Sleep(1 * time.Second)
@@ -160,7 +167,6 @@ func TestNewProcessor(t *testing.T) {
 		// produce message
 		producer := kafka.NewKafkaDriver(&config)
 		_ = producer.Produce(context.Background(), topicName, payloadBytes)
-		_ = producer.Close()
 
 		time.Sleep(5 * time.Second)
 		counter.Lock()
@@ -188,7 +194,10 @@ func TestNewProcessor(t *testing.T) {
 		driver := kafka.NewKafkaDriver(&config)
 		a.NotNil(driver)
 
-		_ = driver.CreateTopic(context.Background(), topicName)
+		err := driver.CreateTopic(context.Background(), topicName)
+		a.Nil(err)
+
+		time.Sleep(2 * time.Second)
 
 		type Payload struct {
 			Count int
@@ -241,7 +250,6 @@ func TestNewProcessor(t *testing.T) {
 		// produce message
 		producer := kafka.NewKafkaDriver(&config)
 		_ = producer.Produce(context.Background(), topicName, payloadBytes)
-		_ = producer.Close()
 
 		time.Sleep(5 * time.Second)
 		counter.Lock()

@@ -84,11 +84,16 @@ func TestNewKafkaDriver(t *testing.T) {
 		// create topic
 		err := driver.CreateTopic(context.Background(), topicName)
 		a.Nil(err)
+
+		time.Sleep(5 * time.Second)
 		go func() {
-			_ = driver.Consume(nil, topicName, func(ctx context.Context, originalMessage *kafka2.Message, message []byte) error {
+			err := driver.Consume(nil, topicName, func(ctx context.Context, originalMessage *kafka2.Message, message []byte) error {
 				messageReceived <- string(message)
 				return nil
 			})
+			if err != nil {
+				t.Errorf("failed to consume message: %v", err)
+			}
 		}()
 
 		time.Sleep(5 * time.Second)
