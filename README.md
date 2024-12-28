@@ -149,4 +149,28 @@ func (k *KafkaDriver) Consume(ctx context.Context, topic string, handler func(co
 
 ### Middlewares
 
-Middlewares 
+To create a middleware, you just need to implement the below type:
+```go
+type Middleware[DM any, M any] func(ctx context.Context, data event.Event[DM, M], next Handler[DM, M]) (*event.Event[DM, M], error)
+```
+
+Example of a middleware, you can specify *kafka.Message since this below middleware is only used for kafka:
+
+```go
+// middleware
+
+type FancyMiddleware[DM any, M any] struct {
+}
+
+func NewFancyMiddleware[M any]() *FancyMiddleware[*kafka.Message, M] {
+	// do init things here
+	return &FancyMiddleware[*kafka.Message, M]{}
+}
+
+func (f *FancyMiddleware[DM, M]) Process(ctx context.Context, data event.Event[*kafka.Message, payload], next middleware.Handler[*kafka.Message, payload]) (*event.Event[*kafka.Message, payload], error) {
+	// do message processing here
+	data.Payload.Count++
+	return next(ctx, data)
+}
+
+```
