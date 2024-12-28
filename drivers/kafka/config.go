@@ -44,5 +44,6 @@ func hydrateIfNotNil[T any](cfg *kafka.ConfigMap, key string, value *T) {
 		return
 	}
 	// looked at the source code, as of now, there's no error being returned, it's always nil
+	//nolint:errcheck
 	_ = cfg.SetKey(key, *value)
 }

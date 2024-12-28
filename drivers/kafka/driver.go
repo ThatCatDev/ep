@@ -3,10 +3,11 @@ package kafka
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
-	"github.com/thatcatdev/ep/event"
 
 	"github.com/thatcatdev/ep/drivers"
+	"github.com/thatcatdev/ep/event"
 )
 
 type KafkaDriver struct {
@@ -23,6 +24,7 @@ func NewKafkaDriver(config *KafkaConfig) drivers.Driver[*kafka.Message] {
 	if err != nil {
 		panic(err)
 	}
+
 	return &KafkaDriver{
 		client:      admin,
 		config:      cfg,
@@ -102,6 +104,7 @@ func (k *KafkaDriver) Close() error {
 	}
 
 	k.client.Close()
+
 	return nil
 }
 
@@ -123,6 +126,5 @@ func (k *KafkaDriver) ExtractEvent(data *kafka.Message) (*event.SubData[*kafka.M
 
 	err = json.Unmarshal(msgByte, &eventData.RawData)
 
-	return eventData, nil
-
+	return eventData, err
 }

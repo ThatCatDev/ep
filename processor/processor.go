@@ -2,6 +2,7 @@ package processor
 
 import (
 	"context"
+
 	"github.com/thatcatdev/ep/drivers"
 	"github.com/thatcatdev/ep/event"
 	"github.com/thatcatdev/ep/middleware"
@@ -30,7 +31,6 @@ func NewProcessor[DM any, M any](driver drivers.Driver[DM], topic string, proces
 }
 
 func (p *processor[DM, M]) Run(ctx context.Context) error {
-
 	// Consume messages from the queue
 	err := p.driver.Consume(ctx, p.topic, func(ctx context.Context, originalMessage DM, message []byte) error {
 		extractedData, err := p.driver.ExtractEvent(originalMessage)
@@ -53,6 +53,9 @@ func (p *processor[DM, M]) Run(ctx context.Context) error {
 		}
 
 		data, err = chain(ctx, *data)
+		if err != nil {
+			return err
+		}
 		// Process the message
 		_, err = p.process(ctx, *data)
 		if err != nil {
@@ -67,5 +70,6 @@ func (p *processor[DM, M]) Run(ctx context.Context) error {
 
 func (p *processor[DM, M]) AddMiddleware(m middleware.Middleware[DM, M]) Processor[DM, M] {
 	p.middlewares = append(p.middlewares, m)
+
 	return p
 }
