@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+
 	"github.com/thatcatdev/ep/event"
 )
 

@@ -3,7 +3,6 @@ package processor_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	kafka2 "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/stretchr/testify/assert"
 	"github.com/thatcatdev/ep/drivers/kafka"
@@ -219,12 +218,17 @@ func TestNewProcessor(t *testing.T) {
 			counter.Lock()
 			counter.Count++
 			counter.Unlock()
-			return &data, fmt.Errorf("short-circuit")
+			return &data, nil
+		}
+		middlewareFuncFail := func(ctx context.Context, data event.Event[*kafka2.Message, Payload], next middleware.Handler[*kafka2.Message, Payload]) (*event.Event[*kafka2.Message, Payload], error) {
+
+			return &data, assert.AnError
 		}
 
 		go func() {
 			_ = processorInstance.
 				AddMiddleware(middlewareFunc).
+				AddMiddleware(middlewareFuncFail).
 				AddMiddleware(middlewareFunc).
 				Run(context.Background())
 		}()
