@@ -1,8 +1,3 @@
-/**
- * DO NOT CHANGE. This file is being managed from a central repository
- * To know more simply visit https://github.com/honestbank/.github/blob/main/docs/about.md
- */
-
 class SemanticReleaseError extends Error {
     constructor(message, code, details) {
         super();

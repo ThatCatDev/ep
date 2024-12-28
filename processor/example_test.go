@@ -62,7 +62,9 @@ func ExampleProcessor() {
 	}()
 
 	// Produce a message
-	err := driver.Produce(ctx, topicName, []byte("{\"Count\": 1}"))
+	err := driver.Produce(ctx, topicName, &kafka2.Message{
+		Value: []byte("{\"Count\": 1}"),
+	})
 	if err != nil {
 		log.Fatalf("failed to produce message: %v", err)
 	}

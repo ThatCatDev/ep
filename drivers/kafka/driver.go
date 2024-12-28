@@ -56,7 +56,7 @@ func (k *KafkaDriver) Consume(ctx context.Context, topic string, handler func(co
 	}
 }
 
-func (k *KafkaDriver) Produce(ctx context.Context, topic string, message []byte) error {
+func (k *KafkaDriver) Produce(ctx context.Context, topic string, message *kafka.Message) error {
 	producer, err := kafka.NewProducer(k.config)
 	if err != nil {
 		return err
@@ -67,7 +67,9 @@ func (k *KafkaDriver) Produce(ctx context.Context, topic string, message []byte)
 
 	err = producer.Produce(&kafka.Message{
 		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
-		Value:          message,
+		Value:          message.Value,
+		Headers:        message.Headers,
+		Key:            message.Key,
 	}, deliveryChan)
 	if err != nil {
 		return err

@@ -43,7 +43,7 @@ func ExampleKafkaDriver() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	
+
 	go func() {
 		_ = driver.Consume(nil, topicName, func(ctx context.Context, originalMessage *kafka2.Message, message []byte) error {
 			messageReceived <- string(message)
@@ -53,7 +53,9 @@ func ExampleKafkaDriver() {
 
 	time.Sleep(5 * time.Second)
 
-	err = driver.Produce(context.Background(), topicName, []byte("test"))
+	err = driver.Produce(context.Background(), topicName, &kafka2.Message{
+		Value: []byte("test"),
+	})
 
 	// wait for message to be consumed
 	select {

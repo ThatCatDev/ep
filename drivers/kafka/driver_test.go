@@ -98,7 +98,9 @@ func TestNewKafkaDriver(t *testing.T) {
 
 		time.Sleep(5 * time.Second)
 
-		err = driver.Produce(context.Background(), topicName, []byte("test"))
+		err = driver.Produce(context.Background(), topicName, &kafka2.Message{
+			Value: []byte("test"),
+		})
 
 		// wait for message to be consumed
 		select {
@@ -148,7 +150,9 @@ func TestNewKafkaDriver(t *testing.T) {
 		time.Sleep(5 * time.Second)
 
 		for i := 0; i < 10; i++ {
-			err = driver.Produce(context.Background(), topicName, []byte("test"))
+			err = driver.Produce(context.Background(), topicName, &kafka2.Message{
+				Value: []byte("test"),
+			})
 			a.Nil(err)
 		}
 
