@@ -246,7 +246,7 @@ func TestNewProcessor(t *testing.T) {
 				Run(context.Background())
 		}()
 
-		time.Sleep(1 * time.Second)
+		time.Sleep(5 * time.Second)
 
 		payload := Payload{Count: 0}
 
