@@ -60,7 +60,7 @@ func (p *processor[DM, M]) Run(ctx context.Context) error {
 			return err
 		}
 
-		data, err = chain(ctx, *data)
+		_, err = chain(ctx, *data)
 		if err != nil {
 			return err
 		}

@@ -2,10 +2,10 @@ package backoffretry
 
 import (
 	"context"
-	"github.com/cenkalti/backoff/v5"
 	"strconv"
 	"time"
 
+	"github.com/cenkalti/backoff/v5"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 
 	"github.com/thatcatdev/ep/drivers"
@@ -65,6 +65,7 @@ func (b *BackoffRetry[M]) Process(ctx context.Context, data event.Event[*kafka.M
 	newData, err := next(ctx, data)
 	if err != nil {
 		time.Sleep(duration)
+
 		return b.handleError(ctx, data, err)
 	}
 	b.exponentialBackOff.Reset()
