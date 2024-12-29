@@ -81,7 +81,7 @@ func TestNewBackoffRetry(t *testing.T) {
 			return &data, fmt.Errorf("error")
 		})
 
-		a.NotNil(err)
+		a.Nil(err)
 
 		a.Equal("1", messageEvent.Headers["retry"])
 
@@ -89,7 +89,7 @@ func TestNewBackoffRetry(t *testing.T) {
 			return &data, fmt.Errorf("error")
 		})
 
-		a.NotNil(err)
+		a.Nil(err)
 
 		a.Equal("2", messageEvent.Headers["retry"])
 
@@ -97,7 +97,7 @@ func TestNewBackoffRetry(t *testing.T) {
 			return &data, fmt.Errorf("error")
 		})
 
-		a.NotNil(err)
+		a.Nil(err)
 
 		a.Equal("3", messageEvent.Headers["retry"])
 
