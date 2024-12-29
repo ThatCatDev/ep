@@ -47,17 +47,20 @@ func (p *processor[DM, M]) Run(ctx context.Context) error {
 			return err
 		}
 
-		chain, err := middleware.Chain[DM, M](p.middlewares...)
+		middlewares := append(p.middlewares, func(ctx context.Context, data event.Event[DM, M], next middleware.Handler[DM, M]) (*event.Event[DM, M], error) {
+			_, err = p.process(ctx, data)
+			if err != nil {
+				return &data, err
+			}
+
+			return next(ctx, data)
+		})
+		chain, err := middleware.Chain[DM, M](middlewares...)
 		if err != nil {
 			return err
 		}
 
 		data, err = chain(ctx, *data)
-		if err != nil {
-			return err
-		}
-		// Process the message
-		_, err = p.process(ctx, *data)
 		if err != nil {
 			return err
 		}

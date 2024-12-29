@@ -100,15 +100,15 @@ func (b *BackoffRetry[M]) handleError(ctx context.Context, data event.Event[*kaf
 	}
 
 	if retryCount < b.config.MaxRetries {
-		err := b.driver.Produce(ctx, b.config.RetryQueue, &kafka.Message{
+		produceErr := b.driver.Produce(ctx, b.config.RetryQueue, &kafka.Message{
 			Value:   data.DriverMessage.Value,
 			Headers: headers,
 			Key:     data.DriverMessage.Key,
 		})
-		if err != nil {
-			return &data, err
+		if produceErr != nil {
+			return &data, produceErr
 		}
 	}
 
-	return &data, err
+	return &data, nil
 }

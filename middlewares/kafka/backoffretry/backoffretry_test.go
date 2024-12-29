@@ -2,18 +2,33 @@ package backoffretry_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/stretchr/testify/assert"
+	kafka2 "github.com/thatcatdev/ep/drivers/kafka"
 	"github.com/thatcatdev/ep/drivers/mocks"
 	"github.com/thatcatdev/ep/event"
 	"github.com/thatcatdev/ep/middlewares/kafka/backoffretry"
+	"github.com/thatcatdev/ep/processor"
 	"go.uber.org/mock/gomock"
+	"math/rand"
+	"sync"
 	"testing"
+	"time"
 )
 
 type payload struct {
 	Count int
+}
+
+func RandomString(length int) string {
+	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
 }
 
 func TestNewBackoffRetry(t *testing.T) {
@@ -85,6 +100,83 @@ func TestNewBackoffRetry(t *testing.T) {
 		a.NotNil(err)
 
 		a.Equal("3", messageEvent.Headers["retry"])
+
+	})
+}
+
+func TestProcessorWithBackoffRetry(t *testing.T) {
+	t.Run("Processor with backoff retry", func(t *testing.T) {
+		t.Parallel()
+		a := assert.New(t)
+		ctx := context.Background()
+		consumerGroupName := RandomString(10)
+		topicName := RandomString(10)
+		brokerHost := "localhost:9092"
+		config := kafka2.KafkaConfig{
+			ConsumerGroupName:        consumerGroupName,
+			BootstrapServers:         brokerHost,
+			SaslMechanism:            nil,
+			SecurityProtocol:         nil,
+			Username:                 nil,
+			Password:                 nil,
+			ConsumerSessionTimeoutMs: nil,
+			ConsumerAutoOffsetReset:  nil,
+			ClientID:                 nil,
+			Debug:                    nil,
+		}
+		driver := kafka2.NewKafkaDriver(&config)
+		a.NotNil(driver)
+
+		err := driver.CreateTopic(context.Background(), topicName)
+		a.Nil(err)
+
+		time.Sleep(5 * time.Second)
+
+		backoffretryInstance := backoffretry.NewBackoffRetry[payload](driver, backoffretry.Config{
+			MaxRetries: 3,
+			HeaderKey:  "retry",
+			RetryQueue: topicName,
+		})
+
+		type Counter struct {
+			sync.Mutex
+			Count int
+		}
+
+		counter := &Counter{
+			Count: 0,
+		}
+
+		processorInstance := processor.NewProcessor[*kafka.Message, payload](driver, topicName, func(ctx context.Context, data event.Event[*kafka.Message, payload]) (event.Event[*kafka.Message, payload], error) {
+			t.Logf("message received: %v", data)
+			counter.Lock()
+			counter.Count++
+			counter.Unlock()
+			return data, fmt.Errorf("error")
+		})
+
+		go func() {
+			err := processorInstance.
+				AddMiddleware(backoffretryInstance.Process).
+				Run(ctx)
+			if err != nil && ctx.Err() == nil { // Ignore error if caused by context cancellation
+				t.Errorf("error consuming messages: %v", err)
+			}
+		}()
+		time.Sleep(5 * time.Second)
+
+		payload := payload{Count: 0}
+
+		payloadBytes, _ := json.Marshal(payload)
+
+		_ = driver.Produce(context.Background(), topicName, &kafka.Message{
+			Value: payloadBytes,
+		})
+
+		time.Sleep(15 * time.Second)
+		counter.Lock()
+		defer counter.Unlock()
+		a.Equal(3, counter.Count)
 
 	})
 }
