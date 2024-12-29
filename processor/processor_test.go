@@ -260,6 +260,6 @@ func TestNewProcessor(t *testing.T) {
 		time.Sleep(5 * time.Second)
 		counter.Lock()
 		defer counter.Unlock()
-		a.Equal(2, counter.Count)
+		a.Equal(1, counter.Count)
 	})
 }

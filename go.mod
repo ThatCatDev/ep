@@ -3,8 +3,10 @@ module github.com/thatcatdev/ep
 go 1.23
 
 require (
+	github.com/cenkalti/backoff/v5 v5.0.0
 	github.com/confluentinc/confluent-kafka-go/v2 v2.6.1
 	github.com/stretchr/testify v1.9.0
+	go.uber.org/mock v0.4.0
 )
 
 require (
