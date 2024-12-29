@@ -1,3 +1,4 @@
+//go:generate mockgen -source=driver.go -destination=mocks/driver.go -package mocks
 package drivers
 
 import (
