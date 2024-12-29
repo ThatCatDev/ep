@@ -201,7 +201,7 @@ func TestNewProcessor(t *testing.T) {
 		err := driver.CreateTopic(context.Background(), topicName)
 		a.Nil(err)
 
-		time.Sleep(2 * time.Second)
+		time.Sleep(5 * time.Second)
 
 		type Payload struct {
 			Count int
