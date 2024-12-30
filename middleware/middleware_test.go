@@ -12,7 +12,6 @@ import (
 
 func TestMiddlewareProcess(t *testing.T) {
 	t.Run("TestMiddlewareProcess", func(t *testing.T) {
-		t.Parallel()
 		a := assert.New(t)
 
 		type DriverMessage struct {
@@ -54,7 +53,6 @@ func TestMiddlewareProcess(t *testing.T) {
 
 	})
 	t.Run("TestMiddlewareProcessWithShortCircuit", func(t *testing.T) {
-		t.Parallel()
 		a := assert.New(t)
 
 		type DriverMessage struct {

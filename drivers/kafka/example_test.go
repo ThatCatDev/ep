@@ -45,7 +45,7 @@ func ExampleKafkaDriver() {
 	}
 
 	go func() {
-		_ = driver.Consume(nil, topicName, func(ctx context.Context, originalMessage *kafka2.Message, message []byte) error {
+		_ = driver.Consume(context.Background(), topicName, func(ctx context.Context, originalMessage *kafka2.Message, message []byte) error {
 			messageReceived <- string(message)
 			return nil
 		})

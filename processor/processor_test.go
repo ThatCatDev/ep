@@ -26,7 +26,6 @@ func RandomString(length int) string {
 
 func TestNewProcessor(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		t.Parallel()
 		a := assert.New(t)
 		consumerGroupName := RandomString(10)
 		topicName := RandomString(10)
@@ -77,7 +76,7 @@ func TestNewProcessor(t *testing.T) {
 			_ = processorInstance.Run(context.Background())
 		}()
 
-		time.Sleep(1 * time.Second)
+		time.Sleep(5 * time.Second)
 
 		payload := Payload{Count: 0}
 
@@ -97,7 +96,6 @@ func TestNewProcessor(t *testing.T) {
 	})
 
 	t.Run("Processor with middleware", func(t *testing.T) {
-		t.Parallel()
 		a := assert.New(t)
 		consumerGroupName := RandomString(10)
 		topicName := RandomString(10)
@@ -116,6 +114,11 @@ func TestNewProcessor(t *testing.T) {
 		}
 		driver := kafka.NewKafkaDriver(&config)
 		a.NotNil(driver)
+
+		defer func() {
+			err := driver.Close()
+			a.Nil(err)
+		}()
 
 		err := driver.CreateTopic(context.Background(), topicName)
 		a.Nil(err)
@@ -178,7 +181,6 @@ func TestNewProcessor(t *testing.T) {
 		a.Equal(2, counter.Count)
 	})
 	t.Run("Processor with middleware and short circuit", func(t *testing.T) {
-		t.Parallel()
 		a := assert.New(t)
 		consumerGroupName := RandomString(10)
 		topicName := RandomString(10)
@@ -197,9 +199,18 @@ func TestNewProcessor(t *testing.T) {
 		}
 		driver := kafka.NewKafkaDriver(&config)
 		a.NotNil(driver)
+		defer func() {
+			err := driver.Close()
+			a.Nil(err)
+		}()
 
 		err := driver.CreateTopic(context.Background(), topicName)
 		a.Nil(err)
+
+		defer func() {
+			err := driver.Close()
+			a.Nil(err)
+		}()
 
 		time.Sleep(2 * time.Second)
 
