@@ -33,7 +33,6 @@ func RandomString(length int) string {
 
 func TestNewBackoffRetry(t *testing.T) {
 	t.Run("TestNewBackoffRetry", func(t *testing.T) {
-		t.Parallel()
 
 		ctrl := gomock.NewController(t)
 
@@ -51,7 +50,6 @@ func TestNewBackoffRetry(t *testing.T) {
 	})
 
 	t.Run("TestNewBackoffRetryWithNilDriver", func(t *testing.T) {
-		t.Parallel()
 		a := assert.New(t)
 		ctrl := gomock.NewController(t)
 
@@ -106,7 +104,6 @@ func TestNewBackoffRetry(t *testing.T) {
 
 func TestProcessorWithBackoffRetry(t *testing.T) {
 	t.Run("Processor with backoff retry", func(t *testing.T) {
-		t.Parallel()
 		a := assert.New(t)
 		ctx := context.Background()
 		consumerGroupName := RandomString(10)
@@ -126,6 +123,11 @@ func TestProcessorWithBackoffRetry(t *testing.T) {
 		}
 		driver := kafka2.NewKafkaDriver(&config)
 		a.NotNil(driver)
+
+		defer func() {
+			err := driver.Close()
+			a.Nil(err)
+		}()
 
 		err := driver.CreateTopic(context.Background(), topicName)
 		a.Nil(err)

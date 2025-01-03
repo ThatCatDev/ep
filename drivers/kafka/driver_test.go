@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/thatcatdev/ep/drivers/kafka"
 	"math/rand"
+	"sync"
 	"testing"
 	"time"
 )
@@ -21,7 +22,6 @@ func RandomString(length int) string {
 
 func TestNewKafkaDriver(t *testing.T) {
 	t.Run("TestNewKafkaDriver", func(t *testing.T) {
-		t.Parallel()
 		a := assert.New(t)
 		consumerGroupName := RandomString(10)
 		brokerHost := "localhost:9092"
@@ -45,7 +45,6 @@ func TestNewKafkaDriver(t *testing.T) {
 	})
 
 	t.Run("TestNewKafkaDriverWithInvalidConfig", func(t *testing.T) {
-		t.Parallel()
 		a := assert.New(t)
 		// catch with recover
 		defer func() {
@@ -59,7 +58,6 @@ func TestNewKafkaDriver(t *testing.T) {
 	})
 
 	t.Run("TestConsume", func(t *testing.T) {
-		t.Parallel()
 		a := assert.New(t)
 
 		consumerGroupName := RandomString(10)
@@ -77,18 +75,31 @@ func TestNewKafkaDriver(t *testing.T) {
 			ClientID:                 nil,
 			Debug:                    nil,
 		}
+
 		driver := kafka.NewKafkaDriver(&config)
 		a.NotNil(driver)
 
-		messageReceived := make(chan string)
+		defer func() {
+			err := driver.Close()
+			a.Nil(err)
+		}()
+
+		type CounterMutex struct {
+			Count int
+			sync.Mutex
+		}
+
+		count := CounterMutex{Count: 0}
 		// create topic
 		err := driver.CreateTopic(context.Background(), topicName)
 		a.Nil(err)
 
 		time.Sleep(5 * time.Second)
 		go func() {
-			err := driver.Consume(nil, topicName, func(ctx context.Context, originalMessage *kafka2.Message, message []byte) error {
-				messageReceived <- string(message)
+			err := driver.Consume(context.Background(), topicName, func(ctx context.Context, originalMessage *kafka2.Message, message []byte) error {
+				count.Lock()
+				count.Count++
+				count.Unlock()
 				return nil
 			})
 			if err != nil {
@@ -101,21 +112,18 @@ func TestNewKafkaDriver(t *testing.T) {
 		err = driver.Produce(context.Background(), topicName, &kafka2.Message{
 			Value: []byte("test"),
 		})
+		a.Nil(err)
 
 		// wait for message to be consumed
-		select {
-		case msg := <-messageReceived:
-			t.Logf("test passed: received message '%s'", msg)
-		case <-time.After(5 * time.Second):
-			t.Errorf("message not consumed")
-		}
+		time.Sleep(5 * time.Second)
 
-		err = driver.Close()
-		a.Nil(err)
+		count.Lock()
+		a.Equal(1, count.Count)
+		count.Unlock()
+
 	})
 
 	t.Run("TestConsumeManyMessages", func(t *testing.T) {
-		t.Parallel()
 		a := assert.New(t)
 
 		consumerGroupName := RandomString(10)
@@ -136,13 +144,28 @@ func TestNewKafkaDriver(t *testing.T) {
 		driver := kafka.NewKafkaDriver(&config)
 		a.NotNil(driver)
 
-		messageReceived := make(chan string)
+		defer func() {
+			err := driver.Close()
+			a.Nil(err)
+		}()
+
+		type CounterMutex struct {
+			Count int
+			sync.Mutex
+		}
+
+		count := CounterMutex{Count: 0}
+
 		// create topic
 		err := driver.CreateTopic(context.Background(), topicName)
 		a.Nil(err)
+
+		time.Sleep(5 * time.Second)
 		go func() {
-			_ = driver.Consume(nil, topicName, func(ctx context.Context, originalMessage *kafka2.Message, message []byte) error {
-				messageReceived <- string(message)
+			_ = driver.Consume(context.Background(), topicName, func(ctx context.Context, originalMessage *kafka2.Message, message []byte) error {
+				count.Lock()
+				count.Count++
+				count.Unlock()
 				return nil
 			})
 		}()
@@ -157,23 +180,17 @@ func TestNewKafkaDriver(t *testing.T) {
 		}
 
 		// wait for message to be consumed
-		for i := 0; i < 10; i++ {
-			select {
-			case msg := <-messageReceived:
-				t.Logf("test passed: received message '%s'", msg)
-			case <-time.After(5 * time.Second):
-				t.Errorf("message not consumed")
-			}
-		}
+		time.Sleep(10 * time.Second)
 
-		err = driver.Close()
-		a.Nil(err)
+		count.Lock()
+		a.Equal(10, count.Count)
+		count.Unlock()
+
 	})
 }
 
 func TestKafkaDriver_ExtractEvent(t *testing.T) {
 	t.Run("TestKafkaDriver_ExtractEvent", func(t *testing.T) {
-		t.Parallel()
 		a := assert.New(t)
 		cfg := kafka.KafkaConfig{}
 
@@ -193,13 +210,17 @@ func TestKafkaDriver_ExtractEvent(t *testing.T) {
 		}
 
 		driver := kafka.NewKafkaDriver(&cfg)
+
+		defer func() {
+			err := driver.Close()
+			a.Nil(err)
+		}()
 		event, err := driver.ExtractEvent(&data)
 		a.Nil(err)
 		a.Equal(map[string]string{}, event.Headers)
 		a.Equal(&data, event.DriverMessage)
 	})
 	t.Run("TestKafkaDriver_ExtractEventWithHeaders", func(t *testing.T) {
-		t.Parallel()
 		a := assert.New(t)
 		cfg := kafka.KafkaConfig{}
 

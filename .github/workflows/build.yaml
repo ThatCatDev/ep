@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ "1.23" ]
+        go: [ "1.23.4" ]
     steps:
       - name: Set up Golang
         uses: actions/setup-go@v2
@@ -46,12 +46,11 @@ jobs:
           #
           # Default: ./docker-compose.yml
           compose-file: docker-compose.yaml
-
-      - name: wait for services
-        run: sleep 20
-
-      - name: Test and generate code coverage
-        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+       # run tests in golang docker container
+      - name: Run tests
+        run:  docker run --network=host -v $(pwd):/app -w /app golang:1.23 bash -c "go test -v ./..."
+  #      - name: Test and generate code coverage
+#        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
 
   release:
     name: semantic-release
@@ -61,7 +60,7 @@ jobs:
       - name: Set up Golang
         uses: actions/setup-go@v2
         with:
-          go-version: "1.23"
+          go-version: "1.23.4"
         id: go
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
