@@ -37,3 +37,17 @@ services:
       JVM_OPTS: "-Xms32M -Xmx64M"
     depends_on:
       - broker
+  pulsar:
+    image: apachepulsar/pulsar:4.0.1
+    container_name: pulsar
+    ports:
+      - "6650:6650"
+      - "8080:8080"
+    volumes:
+      - pulsardata:/pulsar/data
+      - pulsarconf:/pulsar/conf
+    command: [ "bin/pulsar", "standalone" ]
+
+volumes:
+  pulsardata:
+  pulsarconf:
