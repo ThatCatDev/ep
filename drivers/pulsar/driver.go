@@ -3,11 +3,11 @@ package pulsar
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"log"
+
 	"github.com/apache/pulsar-client-go/pulsar"
 	"github.com/thatcatdev/ep/drivers"
 	"github.com/thatcatdev/ep/event"
-	"log"
 )
 
 type PulsarMessage struct {
@@ -22,7 +22,6 @@ type PulsarDriver struct {
 }
 
 func NewPulsarDriver(config *Config) drivers.Driver[*PulsarMessage] {
-
 	client, err := pulsar.NewClient(pulsar.ClientOptions{
 		URL: config.URL,
 	})
@@ -53,7 +52,7 @@ func (p *PulsarDriver) Consume(ctx context.Context, topic string, handler func(c
 	for {
 		msg, err := p.consumer.Receive(ctx)
 		if err != nil {
-			fmt.Println("error receiving message: ", err)
+			return err
 		}
 
 		puslarMessage := &PulsarMessage{
@@ -69,7 +68,6 @@ func (p *PulsarDriver) Consume(ctx context.Context, topic string, handler func(c
 			log.Println("failed to ack message: ", err)
 		}
 	}
-
 }
 
 func (p *PulsarDriver) Produce(ctx context.Context, topic string, message *PulsarMessage) error {
@@ -122,7 +120,9 @@ func (p *PulsarDriver) ExtractEvent(msg *PulsarMessage) (*event.SubData[*PulsarM
 	}
 
 	err = json.Unmarshal(msgByte, &eventData.RawData)
+	if err != nil {
+		return nil, err
+	}
 
 	return eventData, nil
-
 }
