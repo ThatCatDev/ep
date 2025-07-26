@@ -6,8 +6,8 @@ import (
 	"log"
 
 	"github.com/apache/pulsar-client-go/pulsar"
-	"github.com/thatcatdev/ep/drivers"
-	"github.com/thatcatdev/ep/event"
+	"github.com/ThatCatDev/ep/drivers"
+	"github.com/ThatCatDev/ep/event"
 )
 
 type PulsarMessage struct {

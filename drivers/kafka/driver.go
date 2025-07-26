@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
-	"github.com/thatcatdev/ep/drivers"
-	"github.com/thatcatdev/ep/event"
+	"github.com/ThatCatDev/ep/drivers"
+	"github.com/ThatCatDev/ep/event"
 )
 
 type KafkaDriver struct {

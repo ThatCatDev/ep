@@ -4,7 +4,7 @@ import (
 	"context"
 	kafka2 "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/stretchr/testify/assert"
-	"github.com/thatcatdev/ep/drivers/kafka"
+	"github.com/ThatCatDev/ep/drivers/kafka"
 	"math/rand"
 	"sync"
 	"testing"
