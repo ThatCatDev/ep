@@ -3,7 +3,7 @@ package middleware
 import (
 	"context"
 
-	"github.com/ThatCatDev/ep/event"
+	"github.com/ThatCatDev/ep/v2/event"
 )
 
 type Handler[DM any, M any] func(ctx context.Context, data event.Event[DM, M]) (*event.Event[DM, M], error)

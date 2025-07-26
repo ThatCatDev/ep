@@ -8,9 +8,9 @@ import (
 	"github.com/cenkalti/backoff/v5"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 
-	"github.com/ThatCatDev/ep/drivers"
-	"github.com/ThatCatDev/ep/event"
-	"github.com/ThatCatDev/ep/middleware"
+	"github.com/ThatCatDev/ep/v2/drivers"
+	"github.com/ThatCatDev/ep/v2/event"
+	"github.com/ThatCatDev/ep/v2/middleware"
 )
 
 type Config struct {

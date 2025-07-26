@@ -2,10 +2,10 @@ package processor_test
 
 import (
 	"context"
+	"github.com/ThatCatDev/ep/v2/drivers/kafka"
+	"github.com/ThatCatDev/ep/v2/event"
+	"github.com/ThatCatDev/ep/v2/processor"
 	kafka2 "github.com/confluentinc/confluent-kafka-go/v2/kafka"
-	"github.com/ThatCatDev/ep/drivers/kafka"
-	"github.com/ThatCatDev/ep/event"
-	"github.com/ThatCatDev/ep/processor"
 	"log"
 	"math/rand"
 )
