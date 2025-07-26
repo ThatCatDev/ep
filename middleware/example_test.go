@@ -3,9 +3,9 @@ package middleware_test
 import (
 	"context"
 	"fmt"
+	"github.com/ThatCatDev/ep/v2/event"
+	"github.com/ThatCatDev/ep/v2/middleware"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
-	"github.com/ThatCatDev/ep/event"
-	"github.com/ThatCatDev/ep/middleware"
 )
 
 type payload struct {

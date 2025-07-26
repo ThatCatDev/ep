@@ -4,7 +4,7 @@ package drivers
 import (
 	"context"
 
-	"github.com/ThatCatDev/ep/event"
+	"github.com/ThatCatDev/ep/v2/event"
 )
 
 type Driver[DM any] interface {

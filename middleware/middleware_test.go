@@ -3,10 +3,10 @@ package middleware_test
 import (
 	"context"
 	"fmt"
-	"github.com/ThatCatDev/ep/middleware"
+	"github.com/ThatCatDev/ep/v2/middleware"
 
+	"github.com/ThatCatDev/ep/v2/event"
 	"github.com/stretchr/testify/assert"
-	"github.com/ThatCatDev/ep/event"
 	"testing"
 )
 

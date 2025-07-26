@@ -3,9 +3,9 @@ package processor
 import (
 	"context"
 
-	"github.com/ThatCatDev/ep/drivers"
-	"github.com/ThatCatDev/ep/event"
-	"github.com/ThatCatDev/ep/middleware"
+	"github.com/ThatCatDev/ep/v2/drivers"
+	"github.com/ThatCatDev/ep/v2/event"
+	"github.com/ThatCatDev/ep/v2/middleware"
 )
 
 type Process[DM any, M any] func(ctx context.Context, data event.Event[DM, M]) (event.Event[DM, M], error)

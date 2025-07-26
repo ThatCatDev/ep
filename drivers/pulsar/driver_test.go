@@ -2,8 +2,8 @@ package pulsar_test
 
 import (
 	"context"
+	"github.com/ThatCatDev/ep/v2/drivers/pulsar"
 	"github.com/stretchr/testify/assert"
-	"github.com/ThatCatDev/ep/drivers/pulsar"
 	"math/rand"
 	"testing"
 	"time"

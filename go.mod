@@ -1,4 +1,4 @@
-module github.com/ThatCatDev/ep
+module github.com/ThatCatDev/ep/v2
 
 go 1.23
 

@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ThatCatDev/ep/drivers"
-	"github.com/ThatCatDev/ep/event"
+	"github.com/ThatCatDev/ep/v2/drivers"
+	"github.com/ThatCatDev/ep/v2/event"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
