@@ -39,6 +39,7 @@ func NewKafkaDriver(config *KafkaConfig) drivers.Driver[*kafka.Message] {
 
 func (k *KafkaDriver) Consume(ctx context.Context, topic string, handler func(context.Context, *kafka.Message, []byte) error) error {
 	cfg := GetKafkaConsumerConfig(*k.kafkaConfig)
+	//nolint:errcheck
 	_ = cfg.SetKey("enable.auto.commit", false)
 
 	consumer, err := kafka.NewConsumer(cfg)
@@ -62,6 +63,7 @@ func (k *KafkaDriver) Consume(ctx context.Context, topic string, handler func(co
 				if ok && (kafkaErr.IsRetriable() || kafkaErr.Code() == kafka.ErrTimedOut) {
 					continue // not a real error
 				}
+
 				return fmt.Errorf("read error: %w", err)
 			}
 			if msg == nil || msg.Value == nil {
@@ -107,6 +109,7 @@ func (k *KafkaDriver) Produce(ctx context.Context, topic string, message *kafka.
 	if m.TopicPartition.Error != nil {
 		return m.TopicPartition.Error
 	}
+
 	return nil
 }
 
@@ -116,6 +119,7 @@ func (k *KafkaDriver) CreateTopic(ctx context.Context, topic string) error {
 		NumPartitions:     1,
 		ReplicationFactor: 1,
 	}})
+
 	return err
 }
 
