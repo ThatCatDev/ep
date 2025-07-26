@@ -26,17 +26,32 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-  kafdrop:
-    image: obsidiandynamics/kafdrop
-    restart: unless-stopped
-    container_name: kafdrop
-    ports:
-      - 9000:9000
-    environment:
-      KAFKA_BROKERCONNECT: broker:29092
-      JVM_OPTS: "-Xms32M -Xmx64M"
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:latest
+    hostname: schema-registry
+    container_name: schema-registry
     depends_on:
       - broker
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_LISTENERS: http://schema-registry:8081
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://broker:29092
+      SCHEMA_REGISTRY_DEBUG: 'true'
+
+  redpanda-console:
+    image: redpandadata/console:latest
+    container_name: redpanda-console
+    depends_on:
+      - broker
+    ports:
+      - "8082:8080"
+    environment:
+      CONFIG_FILEPATH: /etc/console/config.yaml
+    volumes:
+      - ./redpanda-console-config.yaml:/etc/console/config.yaml
   pulsar:
     image: apachepulsar/pulsar:4.0.1
     container_name: pulsar

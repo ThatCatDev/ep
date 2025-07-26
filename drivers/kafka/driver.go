@@ -8,13 +8,11 @@ import (
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
-
 	"github.com/thatcatdev/ep/drivers"
 	"github.com/thatcatdev/ep/event"
 )
 
 type KafkaDriver struct {
-	consumer    *kafka.Consumer
 	producer    *kafka.Producer
 	kafkaConfig *KafkaConfig
 	config      *kafka.ConfigMap
@@ -28,7 +26,6 @@ func NewKafkaDriver(config *KafkaConfig) drivers.Driver[*kafka.Message] {
 	if err != nil {
 		panic(err)
 	}
-
 	if admin == nil {
 		panic("admin client is nil")
 	}
@@ -42,69 +39,57 @@ func NewKafkaDriver(config *KafkaConfig) drivers.Driver[*kafka.Message] {
 
 func (k *KafkaDriver) Consume(ctx context.Context, topic string, handler func(context.Context, *kafka.Message, []byte) error) error {
 	cfg := GetKafkaConsumerConfig(*k.kafkaConfig)
-	//nolint:errcheck
 	_ = cfg.SetKey("enable.auto.commit", false)
 
-	k.mu.Lock()
-	if k.consumer == nil {
-		consumer, err := kafka.NewConsumer(cfg)
-		if err != nil {
-			k.mu.Unlock()
-
-			return err
-		}
-		k.consumer = consumer
+	consumer, err := kafka.NewConsumer(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to create consumer: %w", err)
 	}
-	consumer := k.consumer
-	k.mu.Unlock()
-
-	defer func() {
-		k.mu.Lock()
-		if consumer != nil {
-			consumer.Close()
-		}
-		k.consumer = nil
-		k.mu.Unlock()
-	}()
+	defer consumer.Close()
 
 	if err := consumer.Subscribe(topic, nil); err != nil {
-		return err
+		return fmt.Errorf("failed to subscribe: %w", err)
 	}
 
 	for {
 		select {
 		case <-ctx.Done():
-			return nil // Exit loop gracefully when context is done
+			return nil
 		default:
 			msg, err := consumer.ReadMessage(time.Second)
 			if err != nil {
-				continue
+				kafkaErr, ok := err.(kafka.Error)
+				if ok && (kafkaErr.IsRetriable() || kafkaErr.Code() == kafka.ErrTimedOut) {
+					continue // not a real error
+				}
+				return fmt.Errorf("read error: %w", err)
 			}
 			if msg == nil || msg.Value == nil {
 				continue
 			}
-
 			if err := handler(ctx, msg, msg.Value); err != nil {
 				return err
 			}
-
 			if _, err := consumer.CommitMessage(msg); err != nil {
-				return err
+				return fmt.Errorf("commit error: %w", err)
 			}
 		}
 	}
 }
 
 func (k *KafkaDriver) Produce(ctx context.Context, topic string, message *kafka.Message) error {
+	k.mu.Lock()
+	defer k.mu.Unlock()
+
 	if k.producer == nil {
 		producer, err := kafka.NewProducer(k.config)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to create producer: %w", err)
 		}
 		k.producer = producer
 	}
 
-	deliveryChan := make(chan kafka.Event)
+	deliveryChan := make(chan kafka.Event, 1)
 	defer close(deliveryChan)
 
 	err := k.producer.Produce(&kafka.Message{
@@ -122,7 +107,6 @@ func (k *KafkaDriver) Produce(ctx context.Context, topic string, message *kafka.
 	if m.TopicPartition.Error != nil {
 		return m.TopicPartition.Error
 	}
-
 	return nil
 }
 
@@ -132,25 +116,14 @@ func (k *KafkaDriver) CreateTopic(ctx context.Context, topic string) error {
 		NumPartitions:     1,
 		ReplicationFactor: 1,
 	}})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (k *KafkaDriver) Close() error {
-	k.mu.Lock() // Lock to ensure thread-safe access
+	k.mu.Lock()
 	defer k.mu.Unlock()
 
 	var firstErr error
-
-	if k.consumer != nil {
-		if err := k.consumer.Close(); err != nil {
-			firstErr = fmt.Errorf("error closing consumer: %w", err)
-		}
-		k.consumer = nil
-	}
 
 	if k.producer != nil {
 		k.producer.Close()
@@ -173,14 +146,12 @@ func (k *KafkaDriver) ExtractEvent(data *kafka.Message) (*event.SubData[*kafka.M
 	for _, v := range data.Headers {
 		headers[v.Key] = string(v.Value)
 	}
-
 	eventData.Headers = headers
 
 	msgByte, err := json.Marshal(data)
 	if err != nil {
 		return nil, err
 	}
-
 	err = json.Unmarshal(msgByte, &eventData.RawData)
 
 	return eventData, err
