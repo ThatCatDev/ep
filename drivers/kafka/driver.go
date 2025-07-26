@@ -7,9 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/ThatCatDev/ep/drivers"
 	"github.com/ThatCatDev/ep/event"
+
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
 type KafkaDriver struct {
