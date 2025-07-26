@@ -23,7 +23,7 @@
       "asciicheck",
       "errcheck",
       "exhaustive",
-      "exportloopref",
+      "copyloopvar",
       "forbidigo",
       "gocyclo",
       "gofmt",
