@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"log"
 
+	"github.com/ThatCatDev/ep/drivers"
+	"github.com/ThatCatDev/ep/event"
+
 	"github.com/apache/pulsar-client-go/pulsar"
-	"github.com/thatcatdev/ep/drivers"
-	"github.com/thatcatdev/ep/event"
 )
 
 type PulsarMessage struct {

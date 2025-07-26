@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
-	"github.com/thatcatdev/ep/event"
-	"github.com/thatcatdev/ep/middleware"
+	"github.com/ThatCatDev/ep/event"
+	"github.com/ThatCatDev/ep/middleware"
 )
 
 type payload struct {
