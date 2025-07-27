@@ -5,7 +5,7 @@ go 1.23
 require (
 	github.com/apache/pulsar-client-go v0.14.0
 	github.com/cenkalti/backoff/v5 v5.0.0
-	github.com/confluentinc/confluent-kafka-go/v2 v2.6.1
+	github.com/confluentinc/confluent-kafka-go/v2 v2.11.0
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/mock v0.4.0
 )
