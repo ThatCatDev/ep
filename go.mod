@@ -1,6 +1,6 @@
 module github.com/ThatCatDev/ep/v2
 
-go 1.23.0
+go 1.24.0
 
 require (
 	github.com/apache/pulsar-client-go v0.14.0

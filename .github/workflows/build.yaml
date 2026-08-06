@@ -12,16 +12,19 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ "1.23.4" ]
+        go: [ "1.24.x" ]
     steps:
+      # setup-go must be v3+ to actually honour go-version. On v2 it silently
+      # fell back to whatever Go the runner image ships, which is how the
+      # linter ended up typechecking a 1.26 stdlib it was too old to parse.
       - name: Set up Golang
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go }}
         id: go
 
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -31,13 +34,14 @@ jobs:
       - name: Setup go modules
         run: go clean -modcache;go mod tidy; go mod download; go mod verify;
 
+      # Pinned rather than "latest": the resolved version has to be built with
+      # a Go at least as new as the toolchain above, and letting it drift is
+      # what silently broke this job.
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2
+        uses: golangci/golangci-lint-action@v6
         with:
-          version: latest
+          version: v1.64.8
           args: --timeout=5m --modules-download-mode=readonly
-          skip-pkg-cache: true
-          skip-build-cache: true
 
       - uses: hoverkraft-tech/compose-action@v2.0.2
         with:
@@ -50,7 +54,7 @@ jobs:
       - name: Run tests
         # EP_INTEGRATION=1 makes an unreachable broker a failure rather than a
         # skip, so CI cannot go green on integration tests that never ran.
-        run:  docker run --network=host -e EP_INTEGRATION=1 -v $(pwd):/app -w /app golang:1.23 bash -c "go test -v ./..."
+        run:  docker run --network=host -e EP_INTEGRATION=1 -v $(pwd):/app -w /app golang:1.24 bash -c "go test -v ./..."
   #      - name: Test and generate code coverage
 #        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
 
@@ -60,12 +64,12 @@ jobs:
     needs: [ build ]
     steps:
       - name: Set up Golang
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v5
         with:
-          go-version: "1.23.4"
+          go-version: "1.24.x"
         id: go
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: release
