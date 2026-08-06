@@ -3,17 +3,17 @@
 The Event Processor (EP) is a component of the [Event-Driven Architecture (EDA)](https://en.wikipedia.org/wiki/Event-driven_architecture)
 that processes events and performs actions based on those events. The EP is responsible for processing events. The EP 
 can be used to implement business logic, data processing, and other tasks that require event processing. EP supports
-multiple drivers such as Kafka and RabbitMQ with the option to add middlewares such as a tracing
+multiple drivers such as Kafka, NATS JetStream, and Pulsar with the option to add middlewares such as a tracing
 middleware, metrics middleware, backoff retry, and more. Some specific middlewares such as a backoff retry handled by
 Rabbitmq is also possible abstracting the retry logic from the business logic.
 
 
 ## Features
 
-- **Event Processing**: Process events from different sources such as Kafka and RabbitMQ.
+- **Event Processing**: Process events from different sources such as Kafka, NATS JetStream, and Pulsar.
 - **Middleware Support**: Add middlewares to the event processor to add additional functionality such as tracing, 
 - metrics, and backoff retry.
-- **Driver Support**: Supports multiple drivers such as Kafka and RabbitMQ.
+- **Driver Support**: Supports multiple drivers such as Kafka, NATS JetStream, and Pulsar.
 
 
 ## Usage
@@ -103,6 +103,59 @@ err := processorInstance.
     AddMiddleware(middleware.NewBackoffRetryMiddleware()).
     Run(ctx)
 ```
+
+### NATS JetStream
+
+The NATS driver is a drop-in alternative to the Kafka driver: the same processor
+and middleware chain work unchanged, only the driver and its message type
+differ.
+
+```go
+import (
+	epnats "github.com/ThatCatDev/ep/v2/drivers/nats"
+	"github.com/ThatCatDev/ep/v2/middlewares/nats/backoffretry"
+)
+
+driver := epnats.NewNatsDriver(&epnats.Config{
+	URL:               "nats://localhost:4222",
+	ConsumerGroupName: "anime-sync", // the durable consumer, i.e. the Kafka consumer group
+})
+defer driver.Close()
+
+processorInstance := processor.NewProcessor[*epnats.Message, payload](driver, "anime.public.anime", handle)
+
+retry := backoffretry.NewBackoffRetry[payload](driver, backoffretry.Config{
+	MaxRetries: 3,
+	HeaderKey:  "retry",
+	RetryQueue: "anime.public.anime-retry",
+})
+
+err := processorInstance.AddMiddleware(retry.Process).Run(ctx)
+```
+
+Mapping from Kafka:
+
+| Kafka                     | NATS JetStream                                              |
+|---------------------------|-------------------------------------------------------------|
+| topic                     | subject, plus a stream that binds it                        |
+| `group.id`                | `ConsumerGroupName`, used as the durable consumer name      |
+| `auto.offset.reset`       | `ConsumerAutoOffsetReset`, applied when the consumer is created |
+| partition key             | no equivalent — see the ordering note below                 |
+| offset commit             | per-message ack, sent once the handler returns nil          |
+
+`CreateTopic` creates the stream backing a subject; subjects themselves need no
+creation. When `StreamName` is empty a stream name is derived from the subject,
+so `anime-db.public.anime` is backed by a stream named `anime-db_public_anime`.
+Set `StreamName` explicitly to keep several subjects on one stream.
+
+**Ordering.** Kafka orders messages per partition, and keying by, say, a primary
+key guarantees that every change to one row is handled in order. NATS has no
+partition key. JetStream orders messages within a subject, but a consumer with
+`MaxAckPending > 1` may hand two messages from the same subject to different
+workers at once. `Message.Key` is carried as a header so key-aware middleware
+and downstream sinks keep working, but it does not constrain delivery order.
+Where per-key ordering matters, either give each key its own subject, set
+`MaxAckPending: 1`, or make the consumer's work order-independent.
 
 ### Creating Drivers
 

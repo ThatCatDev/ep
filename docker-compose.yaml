@@ -52,6 +52,21 @@ services:
       CONFIG_FILEPATH: /etc/console/config.yaml
     volumes:
       - ./redpanda-console-config.yaml:/etc/console/config.yaml
+  nats:
+    image: nats:2.10-alpine
+    container_name: nats
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command: [ "--jetstream", "--store_dir", "/data", "--http_port", "8222" ]
+    volumes:
+      - natsdata:/data
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8222/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   pulsar:
     image: apachepulsar/pulsar:4.0.1
     container_name: pulsar
@@ -66,3 +81,4 @@ services:
 volumes:
   pulsardata:
   pulsarconf:
+  natsdata:

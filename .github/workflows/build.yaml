@@ -48,7 +48,9 @@ jobs:
           compose-file: docker-compose.yaml
        # run tests in golang docker container
       - name: Run tests
-        run:  docker run --network=host -v $(pwd):/app -w /app golang:1.23 bash -c "go test -v ./..."
+        # EP_INTEGRATION=1 makes an unreachable broker a failure rather than a
+        # skip, so CI cannot go green on integration tests that never ran.
+        run:  docker run --network=host -e EP_INTEGRATION=1 -v $(pwd):/app -w /app golang:1.23 bash -c "go test -v ./..."
   #      - name: Test and generate code coverage
 #        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
 
