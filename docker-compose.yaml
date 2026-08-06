@@ -77,6 +77,15 @@ services:
       - pulsardata:/pulsar/data
       - pulsarconf:/pulsar/conf
     command: [ "bin/pulsar", "standalone" ]
+    # Standalone takes a while to accept connections. Without a healthcheck
+    # `compose up --wait` returns as soon as the container is running and the
+    # tests race the broker's startup.
+    healthcheck:
+      test: [ "CMD-SHELL", "bin/pulsar-admin brokers healthcheck || exit 1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 30s
 
 volumes:
   pulsardata:

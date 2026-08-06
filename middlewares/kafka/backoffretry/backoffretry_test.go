@@ -1,3 +1,5 @@
+//go:build integration_kafka
+
 package backoffretry_test
 
 import (

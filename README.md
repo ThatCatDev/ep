@@ -157,6 +157,26 @@ and downstream sinks keep working, but it does not constrain delivery order.
 Where per-key ordering matters, either give each key its own subject, set
 `MaxAckPending: 1`, or make the consumer's work order-independent.
 
+### Running the tests
+
+Tests that need a live broker sit behind a per-driver build tag, so the
+default run is hermetic and needs no containers:
+
+```sh
+make test          # everything that needs no broker, ~2s
+make test-kafka    # brings up the broker, runs -tags integration_kafka
+make test-nats     # brings up nats,        runs -tags integration_nats
+make test-pulsar   # brings up pulsar,      runs -tags integration_pulsar
+make test-all
+```
+
+The tags are `integration_kafka`, `integration_nats`, and `integration_pulsar`.
+CI runs each as its own job against only its own broker, so one unhealthy
+container cannot take down the others' results.
+
+The NATS driver's unit tests are the exception: they run an in-process
+JetStream server, so they are hermetic and stay in the default run.
+
 ### Creating Drivers
 
 Drivers are simple to create, they must implement this interface:

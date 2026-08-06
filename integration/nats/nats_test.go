@@ -1,10 +1,11 @@
+//go:build integration_nats
+
 package nats_test
 
 import (
 	"context"
 	"errors"
 	"math/rand"
-	"os"
 	"sync"
 	"testing"
 	"time"
@@ -35,25 +36,19 @@ func RandomString(length int) string {
 	return string(b)
 }
 
-// requireServer skips the suite when no NATS server is running, so that
-// `go test ./...` stays useful without `docker compose up`. Set
-// EP_INTEGRATION=1 to turn a missing server into a failure instead, which is
-// what CI should do.
+// requireServer fails fast with an actionable message rather than letting
+// every subtest time out separately. Reaching this file at all means the
+// integration_nats tag was passed, so a missing broker is an error, not a
+// reason to skip.
 func requireServer(t *testing.T) {
 	t.Helper()
 
 	conn, err := nats.Connect(natsURL, nats.Timeout(2*time.Second))
-	if err == nil {
-		conn.Close()
-
-		return
+	if err != nil {
+		t.Fatalf("nats is not reachable at %s (run `docker compose up -d nats`): %v", natsURL, err)
 	}
 
-	if os.Getenv("EP_INTEGRATION") == "1" {
-		t.Fatalf("nats is not reachable at %s: %v", natsURL, err)
-	}
-
-	t.Skipf("skipping: nats is not reachable at %s (run docker compose up nats)", natsURL)
+	conn.Close()
 }
 
 func TestNatsDriver(t *testing.T) {
