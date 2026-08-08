@@ -1,3 +1,5 @@
+//go:build integration_pulsar
+
 package pulsar_test
 
 import (

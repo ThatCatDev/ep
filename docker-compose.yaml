@@ -52,6 +52,21 @@ services:
       CONFIG_FILEPATH: /etc/console/config.yaml
     volumes:
       - ./redpanda-console-config.yaml:/etc/console/config.yaml
+  nats:
+    image: nats:2.10-alpine
+    container_name: nats
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command: [ "--jetstream", "--store_dir", "/data", "--http_port", "8222" ]
+    volumes:
+      - natsdata:/data
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8222/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   pulsar:
     image: apachepulsar/pulsar:4.0.1
     container_name: pulsar
@@ -62,7 +77,17 @@ services:
       - pulsardata:/pulsar/data
       - pulsarconf:/pulsar/conf
     command: [ "bin/pulsar", "standalone" ]
+    # Standalone takes a while to accept connections. Without a healthcheck
+    # `compose up --wait` returns as soon as the container is running and the
+    # tests race the broker's startup.
+    healthcheck:
+      test: [ "CMD-SHELL", "bin/pulsar-admin brokers healthcheck || exit 1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 30s
 
 volumes:
   pulsardata:
   pulsarconf:
+  natsdata:

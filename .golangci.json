@@ -1,22 +1,23 @@
 {
-  "_ignore": "DO NOT MODIFY THIS FILE: https://github.com/honestbank/.github/blob/main/docs/about.md",
   "run": {
-    "skip-dirs-use-default": true,
     "tests": true
   },
   "issues": {
+    "exclude-dirs-use-default": true,
     "exclude-files": [
       ".*_test.go"
     ],
     "exclude-dirs": [
       ".*/generated/*"
     ],
-    "exclude-rules": {
-      "path": "_test.go",
-      "linters": [
-        "errcheck"
-      ]
-    }
+    "exclude-rules": [
+      {
+        "path": "_test.go",
+        "linters": [
+          "errcheck"
+        ]
+      }
+    ]
   },
   "linters": {
     "enable": [
